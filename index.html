@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Asterisk Cleaner</title>
+  <style>
+    :root {
+      --bg: #0b1020;
+      --panel: rgba(20, 27, 48, 0.82);
+      --panel-2: rgba(15, 22, 40, 0.9);
+      --border: rgba(255, 255, 255, 0.10);
+      --text: #f7f9ff;
+      --muted: #9ca8c7;
+      --accent: #7c5cff;
+      --accent-2: #22d3ee;
+      --success: #34d399;
+      --danger: #fb7185;
+      --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 15%, rgba(124, 92, 255, 0.22), transparent 30%),
+        radial-gradient(circle at 85% 20%, rgba(34, 211, 238, 0.13), transparent 28%),
+        radial-gradient(circle at 50% 100%, rgba(124, 92, 255, 0.10), transparent 35%),
+        var(--bg);
+      padding: 28px 16px;
+    }
+
+    .app {
+      width: min(1100px, 100%);
+      margin: 0 auto;
+    }
+
+    .hero {
+      text-align: center;
+      margin: 16px auto 28px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #cfd7ef;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      backdrop-filter: blur(12px);
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      box-shadow: 0 0 16px rgba(124, 92, 255, 0.7);
+    }
+
+    h1 {
+      margin: 16px 0 10px;
+      font-size: clamp(34px, 6vw, 56px);
+      line-height: 1;
+      letter-spacing: -1.8px;
+      background: linear-gradient(90deg, #ffffff, #bfc8ff 42%, #8defff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .hero p {
+      margin: 0 auto;
+      max-width: 650px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .card {
+      min-width: 0;
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    .card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 18px 12px;
+    }
+
+    .title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      background: rgba(124, 92, 255, 0.15);
+      color: #dcd5ff;
+      font-weight: 800;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .count {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 380px;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: var(--text);
+      padding: 10px 18px 18px;
+      font: 15px/1.65 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      letter-spacing: 0.1px;
+    }
+
+    textarea::placeholder {
+      color: #65708c;
+    }
+
+    .output {
+      min-height: 380px;
+      margin: 0;
+      padding: 10px 18px 18px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      overflow-y: auto;
+      color: #e9edff;
+      font: 15px/1.65 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    .empty {
+      color: #65708c;
+    }
+
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.025);
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      border: 0;
+      outline: 0;
+      cursor: pointer;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font: 700 13px/1 system-ui, sans-serif;
+      transition: transform 0.16s ease, opacity 0.16s ease, background 0.16s ease;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
+
+    .btn-secondary {
+      color: #cbd3ea;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid var(--border);
+    }
+
+    .btn-primary {
+      color: white;
+      background: linear-gradient(135deg, var(--accent), #5f8cff);
+      box-shadow: 0 10px 24px rgba(124, 92, 255, 0.22);
+    }
+
+    .btn-primary.copied {
+      background: linear-gradient(135deg, #059669, #10b981);
+    }
+
+    .tip {
+      margin: 16px auto 0;
+      width: fit-content;
+      max-width: 100%;
+      text-align: center;
+      color: #8996b6;
+      font-size: 12px;
+    }
+
+    kbd {
+      padding: 2px 6px;
+      border: 1px solid var(--border);
+      border-bottom-width: 2px;
+      border-radius: 6px;
+      background: rgba(255,255,255,0.05);
+      color: #c9d2ea;
+    }
+
+    @media (max-width: 800px) {
+      .workspace { grid-template-columns: 1fr; }
+      textarea, .output { min-height: 300px; }
+      body { padding: 18px 12px; }
+      .footer-bar { align-items: flex-start; flex-direction: column; }
+      .actions { width: 100%; }
+      .actions button { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="hero">
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Clean text instantly
+      </div>
+      <h1>Asterisk Cleaner</h1>
+      <p>
+        Paste any message containing <strong>*asterisks*</strong> and get a clean version
+        while keeping the original spacing, line breaks, and overall format.
+      </p>
+    </section>
+
+    <section class="workspace">
+      <article class="card">
+        <div class="card-head">
+          <div class="title-wrap">
+            <div class="icon">✦</div>
+            <h2 class="card-title">Input</h2>
+          </div>
+          <div class="count" id="inputCount">0 characters</div>
+        </div>
+
+        <textarea
+          id="inputText"
+          spellcheck="false"
+          placeholder="Paste your message here...
+
+Example:
+**Hello Amit!**
+*This is a sample message.*
+Please remove all *asterisks* from this text."
+        ></textarea>
+
+        <div class="footer-bar">
+          <div class="status">
+            <span class="status-dot"></span>
+            Removes every <code>*</code>
+          </div>
+          <button class="btn-secondary" id="clearBtn" type="button">Clear</button>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="card-head">
+          <div class="title-wrap">
+            <div class="icon">✓</div>
+            <h2 class="card-title">Clean Result</h2>
+          </div>
+          <div class="count" id="removedCount">0 removed</div>
+        </div>
+
+        <pre class="output empty" id="output">Your cleaned text will appear here...</pre>
+
+        <div class="footer-bar">
+          <div class="status" id="statusText">
+            <span class="status-dot"></span>
+            Ready
+          </div>
+          <div class="actions">
+            <button class="btn-primary" id="copyBtn" type="button">Copy Result</button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <p class="tip">
+      Tip: paste your message, then press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>C</kbd> after selecting the result.
+    </p>
+  </main>
+
+  <script>
+    const input = document.getElementById("inputText");
+    const output = document.getElementById("output");
+    const inputCount = document.getElementById("inputCount");
+    const removedCount = document.getElementById("removedCount");
+    const clearBtn = document.getElementById("clearBtn");
+    const copyBtn = document.getElementById("copyBtn");
+    const statusText = document.getElementById("statusText");
+
+    function cleanText(text) {
+      return text.replace(/\*/g, "");
+    }
+
+    function update() {
+      const source = input.value;
+      const cleaned = cleanText(source);
+      const removed = (source.match(/\*/g) || []).length;
+
+      inputCount.textContent =
+        `${source.length.toLocaleString()} character${source.length === 1 ? "" : "s"}`;
+      removedCount.textContent =
+        `${removed.toLocaleString()} removed`;
+
+      if (!source) {
+        output.textContent = "Your cleaned text will appear here...";
+        output.classList.add("empty");
+        statusText.innerHTML = '<span class="status-dot"></span>Ready';
+        return;
+      }
+
+      output.textContent = cleaned || "(Only asterisks were found)";
+      output.classList.remove("empty");
+
+      statusText.innerHTML =
+        `<span class="status-dot"></span>${removed ? "Text cleaned" : "No asterisks found"}`;
+    }
+
+    async function copyResult() {
+      const source = input.value;
+      if (!source) return;
+
+      const cleaned = cleanText(source);
+
+      try {
+        await navigator.clipboard.writeText(cleaned);
+      } catch (error) {
+        // Fallback for browsers/contexts where Clipboard API is unavailable.
+        const temp = document.createElement("textarea");
+        temp.value = cleaned;
+        temp.style.position = "fixed";
+        temp.style.opacity = "0";
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand("copy");
+        temp.remove();
+      }
+
+      const oldText = copyBtn.textContent;
+      copyBtn.textContent = "✓ Copied";
+      copyBtn.classList.add("copied");
+
+      setTimeout(() => {
+        copyBtn.textContent = oldText;
+        copyBtn.classList.remove("copied");
+      }, 1400);
+    }
+
+    input.addEventListener("input", update);
+
+    clearBtn.addEventListener("click", () => {
+      input.value = "";
+      update();
+      input.focus();
+    });
+
+    copyBtn.addEventListener("click", copyResult);
+
+    // Initial state.
+    update();
+  </script>
+</body>
+</html>

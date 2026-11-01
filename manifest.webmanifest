@@ -1,0 +1,27 @@
+{
+  "name": "Asterisk Cleaner",
+  "short_name": "Asterisk",
+  "description": "Removes markdown asterisks and other formatting artifacts from text while preserving line breaks and spacing. 100% client-side.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "title",
+      "text": "text"
+    }
+  }
+}

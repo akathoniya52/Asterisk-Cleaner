@@ -6,18 +6,30 @@ Built with plain **HTML, CSS, and JavaScript** — no frameworks, backend, or ex
 
 ## ✨ Features
 
-- Remove all `*` characters from any text or message
+**Cleaning (toggleable in ⚙️ Options, with presets)**
+- Remove all `*` characters from any text or message — the original core rule
+- Strip `#` heading markers, `_underscore_` emphasis, backticks & code fences, bullet markers, and flatten `[links](url)`
+- Convert `**bold**` / `*italic*` to Unicode bold/italic letters that survive LinkedIn and other plain-text-only editors
+- Strip invisible characters (zero-width chars, BOM, private-use citation glyphs) — emoji joiners and right-to-left marks are kept safe
+- Punctuation clean-up (opt-in): curly quotes → straight, dashes → hyphens, `…` → `...`, non-breaking spaces → spaces
+- Fix Cyrillic/Greek lookalike letters to Latin (opt-in; destructive for genuinely non-Latin text)
+- One-click presets: **Default** · **Plain text** · **For messaging** · **For code**
+- Live stat chips show exactly how many artifacts each rule removed
+
+**Output & workflow**
 - Preserve line breaks, spaces, and formatting
-- Live preview of the cleaned text
+- Live preview in a fixed-height result panel that scrolls (vertically and horizontally for long lines) instead of expanding
 - **Auto-copy** checkbox at the top of the page — copies the cleaned text automatically on every change while enabled
-- Fixed-size result panel that scrolls (vertically and horizontally) instead of expanding with content
-- Show the number of characters in the input
-- Show how many asterisks were removed
-- One-click **Copy Result** button
-- **Clear** button to reset the input
+- **Paste & Clean** button — clipboard in, cleaned text copied back out, in one click
+- One-click **Copy Result**, **Download .txt**, and **Share** (where the browser supports it)
+- Session autosave — input, options, auto-copy flag, options panel, and theme restore on reload; stored only in your browser
+- Character, word, and line counters for the input
+- Keyboard shortcuts: `Ctrl/⌘+Alt+C` copy · `Ctrl/⌘+Alt+X` clear · `Ctrl/⌘+Shift+O` options
+- Drag & drop `.txt` / `.md` files onto the input card to load them
+- Dark / light theme — follows your system preference, switchable from the toolbar
+- Installable as an app (PWA) with full offline support and a text share target
 - Responsive design for desktop and mobile
-- Works completely in the browser
-- No data is uploaded to a server
+- Works completely in the browser — no data is uploaded to a server
 
 ## 🖥️ Demo
 
@@ -54,7 +66,11 @@ No npm packages or build tools are required.
 ```text
 asterisk-cleaner/
 │
-├── index.html
+├── index.html              — the complete app (UI, styles, cleaning engine)
+├── manifest.webmanifest    — PWA manifest (install, offline shell, share target)
+├── sw.js                   — service worker for offline support
+├── icon.svg                — app icon
+├── plan.md                 — researched feature roadmap
 └── Readme.md
 ```
 
@@ -76,25 +92,38 @@ in any modern web browser.
 
 That's it. There is no setup or installation step.
 
+### 3. Optional — install as an app / offline
+
+Open the folder over http(s) (e.g. run `python3 -m http.server 8000` and visit
+`http://localhost:8000`) and use your browser's **Install** option. The installed app:
+
+- works with no internet connection, and
+- can appear in your phone's share sheet ("Share text → Asterisk Cleaner").
+
+Opening `index.html` directly still works fine — only the install/offline extras need a server.
+
 ## ⚙️ How It Works
 
-The application removes every asterisk using JavaScript:
+The application removes every asterisk with a simple rule:
 
 ```javascript
-function cleanText(text) {
-  return text.replace(/\*/g, "");
-}
+return text.replace(/\*/g, "");
 ```
 
-The `/\*/g` regular expression finds every `*` character in the input and replaces it with an empty string.
-
-Because the replacement only targets the asterisk character, other text, whitespace, and line breaks remain unchanged.
+`clean(text, options)` now runs a pipeline of **toggleable rules** (invisible characters,
+punctuation, markdown structure, emphasis pairs, Unicode conversion, and the asterisk sweep),
+collecting per-rule counts that are shown as stat chips. Every rule is a pure function, so the
+engine is easy to test and extend.
 
 ## 📋 Copy Functionality
 
 The **Copy Result** button copies the cleaned text to the clipboard using the browser Clipboard API.
 
 Alternatively, enable the **Auto-copy** checkbox at the top of the page: while it is checked, the cleaned text is copied to the clipboard automatically on every change.
+
+The **Paste & Clean** button (shown when the browser allows clipboard reading) closes the loop: paste the
+source from your clipboard, clean it, and the cleaned result is put straight on your clipboard for the
+next paste.
 
 A fallback method is also included for browsers or environments where the Clipboard API is unavailable.
 
@@ -108,6 +137,8 @@ Your text:
 - Is not sent to an API
 - Is not stored on a server
 - Does not require an account
+- Is only kept in your browser's local storage between sessions (typed text, options, and theme); clearing site data removes it permanently
+- The service worker only caches the app's own files so it can load offline — it never transmits anything
 
 ## 📱 Responsive Design
 

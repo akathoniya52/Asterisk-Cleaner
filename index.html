@@ -1,9 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Asterisk Cleaner</title>
+  <meta name="description" content="Remove markdown asterisks and formatting artifacts from AI text while keeping spacing and line breaks. 100% client-side." />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#0b1020" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="icon.svg" />
   <style>
     :root {
       --bg: #0b1020;
@@ -11,12 +16,33 @@
       --panel-2: rgba(15, 22, 40, 0.9);
       --border: rgba(255, 255, 255, 0.10);
       --text: #f7f9ff;
+      --text-soft: #cfd7ef;
       --muted: #9ca8c7;
+      --placeholder: #65708c;
+      --glass: rgba(255, 255, 255, 0.05);
+      --glass-2: rgba(255, 255, 255, 0.08);
       --accent: #7c5cff;
       --accent-2: #22d3ee;
       --success: #34d399;
       --danger: #fb7185;
+      --icon-text: #dcd5ff;
       --shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+    }
+
+    :root[data-theme="light"] {
+      --bg: #eef1fb;
+      --panel: rgba(255, 255, 255, 0.86);
+      --panel-2: rgba(247, 249, 255, 0.92);
+      --border: rgba(19, 29, 58, 0.12);
+      --text: #16203b;
+      --text-soft: #39465f;
+      --muted: #5b6885;
+      --placeholder: #8b96ad;
+      --glass: rgba(19, 29, 58, 0.04);
+      --glass-2: rgba(255, 255, 255, 0.7);
+      --icon-text: #453a9c;
+      --shadow: 0 20px 50px rgba(64, 80, 140, 0.18);
+      color-scheme: light;
     }
 
     * { box-sizing: border-box; }
@@ -35,6 +61,13 @@
       padding: 28px 16px;
     }
 
+    :root[data-theme="light"] body {
+      background:
+        radial-gradient(circle at 15% 12%, rgba(124, 92, 255, 0.12), transparent 32%),
+        radial-gradient(circle at 85% 18%, rgba(34, 211, 238, 0.10), transparent 28%),
+        var(--bg);
+    }
+
     .app {
       width: min(1100px, 100%);
       margin: 0 auto;
@@ -42,7 +75,7 @@
 
     .hero {
       text-align: center;
-      margin: 16px auto 28px;
+      margin: 16px auto 24px;
     }
 
     .badge {
@@ -52,8 +85,8 @@
       padding: 8px 12px;
       border: 1px solid var(--border);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #cfd7ef;
+      background: var(--glass);
+      color: var(--text-soft);
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.2px;
@@ -79,6 +112,12 @@
       color: transparent;
     }
 
+    :root[data-theme="light"] h1 {
+      background: linear-gradient(90deg, #3f2fa8, #6a4dff 42%, #0aa7c4);
+      -webkit-background-clip: text;
+      background-clip: text;
+    }
+
     .hero p {
       margin: 0 auto;
       max-width: 650px;
@@ -87,22 +126,30 @@
       line-height: 1.6;
     }
 
-    .auto-copy {
-      position: relative;
+    /* Top-of-page control bar: auto-copy toggle + theme switch. */
+    .toolbar {
       display: flex;
       align-items: center;
       gap: 10px;
       width: fit-content;
       margin: 0 auto 20px;
-      padding: 10px 16px;
+      padding: 8px 10px;
       border: 1px solid var(--border);
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #cfd7ef;
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+    }
+
+    .auto-copy {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 2px 6px;
+      color: var(--text-soft);
       font-size: 13px;
       font-weight: 600;
       letter-spacing: 0.2px;
-      backdrop-filter: blur(12px);
       cursor: pointer;
       user-select: none;
     }
@@ -122,9 +169,8 @@
       height: 22px;
       border-radius: 999px;
       border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.08);
-      transition: background 0.18s ease, border-color 0.18s ease,
-        box-shadow 0.18s ease;
+      background: var(--glass-2);
+      transition: background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
 
     .auto-copy .switch::after {
@@ -135,7 +181,7 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: #cfd7ef;
+      background: var(--text-soft);
       transition: transform 0.18s ease, background 0.18s ease;
     }
 
@@ -155,6 +201,145 @@
       outline-offset: 2px;
     }
 
+    .toolbar-divider {
+      width: 1px;
+      height: 22px;
+      background: var(--border);
+    }
+
+    .icon-btn {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--glass-2);
+      color: var(--text-soft);
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    /* Collapsible cleaning-options panel. */
+    .options {
+      margin: 0 auto 16px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(180deg, var(--panel), var(--panel-2));
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      overflow: hidden;
+    }
+
+    .options summary {
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    .options summary::-webkit-details-marker { display: none; }
+
+    .options summary .active-rules {
+      margin-left: auto;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .options summary .chevron {
+      color: var(--muted);
+      transition: transform 0.18s ease;
+    }
+
+    .options[open] summary .chevron { transform: rotate(180deg); }
+
+    .presets {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 18px 0;
+    }
+
+    .presets-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .chip-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--glass-2);
+      color: var(--text-soft);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 4px 18px;
+      padding: 12px 14px 16px;
+    }
+
+    .opt-group-title {
+      grid-column: 1 / -1;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+    }
+
+    .opt {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      padding: 7px 9px;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .opt:hover { background: var(--glass); }
+
+    .opt input {
+      width: 15px;
+      height: 15px;
+      margin: 2px 0 0;
+      flex: none;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .opt-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-soft);
+    }
+
+    .opt-desc {
+      display: block;
+      margin-top: 1px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      line-height: 1.45;
+    }
+
     .workspace {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -169,6 +354,11 @@
       box-shadow: var(--shadow);
       overflow: hidden;
       backdrop-filter: blur(16px);
+    }
+
+    .card.drop-active {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.28);
     }
 
     .card-head {
@@ -192,7 +382,7 @@
       place-items: center;
       border-radius: 10px;
       background: rgba(124, 92, 255, 0.15);
-      color: #dcd5ff;
+      color: var(--icon-text);
       font-weight: 800;
     }
 
@@ -222,7 +412,7 @@
     }
 
     textarea::placeholder {
-      color: #65708c;
+      color: var(--placeholder);
     }
 
     .output {
@@ -231,12 +421,12 @@
       padding: 10px 18px 18px;
       white-space: pre; /* Keep original lines; long lines scroll instead of wrapping */
       overflow: auto; /* Scroll in both directions when content exceeds the box */
-      color: #e9edff;
+      color: var(--text);
       font: 15px/1.65 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     }
 
     .empty {
-      color: #65708c;
+      color: var(--placeholder);
     }
 
     .footer-bar {
@@ -246,7 +436,7 @@
       gap: 12px;
       padding: 14px 16px;
       border-top: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.025);
+      background: var(--glass);
     }
 
     .status {
@@ -255,11 +445,13 @@
       gap: 8px;
       color: var(--muted);
       font-size: 12px;
+      min-width: 0;
     }
 
     .status-dot {
       width: 8px;
       height: 8px;
+      flex: none;
       border-radius: 50%;
       background: var(--success);
     }
@@ -267,6 +459,7 @@
     .actions {
       display: flex;
       gap: 8px;
+      flex-wrap: wrap;
     }
 
     button {
@@ -283,8 +476,8 @@
     button:active { transform: translateY(0); }
 
     .btn-secondary {
-      color: #cbd3ea;
-      background: rgba(255, 255, 255, 0.07);
+      color: var(--text-soft);
+      background: var(--glass-2);
       border: 1px solid var(--border);
     }
 
@@ -298,6 +491,26 @@
       background: linear-gradient(135deg, #059669, #10b981);
     }
 
+    .stat-chip {
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--glass);
+      color: var(--accent-2);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    #ruleStats { padding: 12px 18px 0; align-items: center; }
+
+    button:focus-visible,
+    summary:focus-visible,
+    .chip-btn:focus-visible {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }
+
     .tip {
       margin: 16px auto 0;
       width: fit-content;
@@ -305,7 +518,10 @@
       text-align: center;
       color: #8996b6;
       font-size: 12px;
+      line-height: 2.1;
     }
+
+    :root[data-theme="light"] .tip { color: var(--muted); }
 
     kbd {
       padding: 2px 6px;
@@ -316,6 +532,8 @@
       color: #c9d2ea;
     }
 
+    :root[data-theme="light"] kbd { color: var(--text-soft); }
+
     @media (max-width: 800px) {
       .workspace { grid-template-columns: 1fr; }
       textarea { min-height: 300px; }
@@ -323,9 +541,27 @@
       body { padding: 18px 12px; }
       .footer-bar { align-items: flex-start; flex-direction: column; }
       .actions { width: 100%; }
-      .actions button { flex: 1; }
+      .actions button { flex: 1 1 auto; }
+      .tip { line-height: 1.8; }
     }
   </style>
+  <script>
+    /* Apply the saved theme before first paint to avoid a dark flash
+     * for users who prefer light mode. */
+    (function () {
+      var theme = null;
+      try {
+        var session = JSON.parse(localStorage.getItem("asterisk-cleaner-session-v1") || "null");
+        if (session && (session.theme === "light" || session.theme === "dark")) theme = session.theme;
+      } catch (error) {}
+      if (!theme) {
+        theme = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches
+          ? "light"
+          : "dark";
+      }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
 </head>
 <body>
   <main class="app">
@@ -341,17 +577,43 @@
       </p>
     </section>
 
-    <label class="auto-copy" for="autoCopy" title="Automatically copy the cleaned text whenever it changes">
-      <input type="checkbox" id="autoCopy" />
-      <span class="switch" aria-hidden="true"></span>
-      Auto-copy result
-    </label>
+    <div class="toolbar">
+      <label class="auto-copy" for="autoCopy" title="Automatically copy the cleaned text whenever it changes">
+        <input type="checkbox" id="autoCopy" />
+        <span class="switch" aria-hidden="true"></span>
+        Auto-copy result
+      </label>
+      <span class="toolbar-divider" aria-hidden="true"></span>
+      <button
+        class="icon-btn"
+        id="themeBtn"
+        type="button"
+        title="Toggle dark / light theme"
+        aria-label="Toggle dark or light theme"
+      >🌙</button>
+    </div>
+
+    <details class="options" id="options">
+      <summary>
+        <span aria-hidden="true">⚙️</span> Cleaning options
+        <span class="chevron" aria-hidden="true">▾</span>
+        <span class="active-rules" id="activeRules"></span>
+      </summary>
+      <div class="presets">
+        <span class="presets-label">Presets</span>
+        <button class="chip-btn" type="button" data-preset="default">Default</button>
+        <button class="chip-btn" type="button" data-preset="plain">Plain text</button>
+        <button class="chip-btn" type="button" data-preset="messaging">For messaging</button>
+        <button class="chip-btn" type="button" data-preset="code">For code</button>
+      </div>
+      <div class="options-grid" id="optionsGrid"></div>
+    </details>
 
     <section class="workspace">
-      <article class="card">
+      <article class="card" id="inputCard">
         <div class="card-head">
           <div class="title-wrap">
-            <div class="icon">✦</div>
+            <div class="icon" aria-hidden="true">✦</div>
             <h2 class="card-title">Input</h2>
           </div>
           <div class="count" id="inputCount">0 characters</div>
@@ -371,29 +633,36 @@ Please remove all *asterisks* from this text."
         <div class="footer-bar">
           <div class="status">
             <span class="status-dot"></span>
-            Removes every <code>*</code>
+            You choose exactly what gets removed
           </div>
-          <button class="btn-secondary" id="clearBtn" type="button">Clear</button>
+          <div class="actions">
+            <button class="btn-secondary" id="pasteCleanBtn" type="button" hidden>Paste &amp; Clean</button>
+            <button class="btn-secondary" id="clearBtn" type="button">Clear</button>
+          </div>
         </div>
       </article>
 
       <article class="card">
         <div class="card-head">
           <div class="title-wrap">
-            <div class="icon">✓</div>
+            <div class="icon" aria-hidden="true">✓</div>
             <h2 class="card-title">Clean Result</h2>
           </div>
-          <div class="count" id="removedCount">0 removed</div>
+          <div class="count" id="removedCount">0 cleaned</div>
         </div>
+
+        <div class="presets" id="ruleStats" hidden aria-label="Summary of what was cleaned"></div>
 
         <pre class="output empty" id="output">Your cleaned text will appear here...</pre>
 
         <div class="footer-bar">
-          <div class="status" id="statusText">
+          <div class="status" id="statusText" role="status" aria-live="polite">
             <span class="status-dot"></span>
             Ready
           </div>
           <div class="actions">
+            <button class="btn-secondary" id="shareBtn" type="button" hidden>Share</button>
+            <button class="btn-secondary" id="downloadBtn" type="button">Download .txt</button>
             <button class="btn-primary" id="copyBtn" type="button">Copy Result</button>
           </div>
         </div>
@@ -401,49 +670,484 @@ Please remove all *asterisks* from this text."
     </section>
 
     <p class="tip">
-      Tip: paste your message, then press <kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>C</kbd> after selecting the result.
+      Shortcuts: <kbd>Ctrl/⌘</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd> copy result ·
+      <kbd>Ctrl/⌘</kbd> + <kbd>Alt</kbd> + <kbd>X</kbd> clear ·
+      <kbd>Ctrl/⌘</kbd> + <kbd>Shift</kbd> + <kbd>O</kbd> options
+      <br />
+      Tip: drag a <kbd>.txt</kbd> / <kbd>.md</kbd> file onto the input card to load it.
     </p>
   </main>
 
   <script>
-    const input = document.getElementById("inputText");
-    const output = document.getElementById("output");
-    const inputCount = document.getElementById("inputCount");
-    const removedCount = document.getElementById("removedCount");
-    const clearBtn = document.getElementById("clearBtn");
-    const copyBtn = document.getElementById("copyBtn");
-    const statusText = document.getElementById("statusText");
-    const autoCopy = document.getElementById("autoCopy");
+    "use strict";
 
-    function cleanText(text) {
-      return text.replace(/\*/g, "");
+    const $ = (id) => document.getElementById(id);
+    const input = $("inputText");
+    const output = $("output");
+    const inputCount = $("inputCount");
+    const removedCount = $("removedCount");
+    const clearBtn = $("clearBtn");
+    const copyBtn = $("copyBtn");
+    const downloadBtn = $("downloadBtn");
+    const shareBtn = $("shareBtn");
+    const pasteCleanBtn = $("pasteCleanBtn");
+    const statusText = $("statusText");
+    const autoCopy = $("autoCopy");
+    const themeBtn = $("themeBtn");
+    const optionsEl = $("options");
+    const optionsGrid = $("optionsGrid");
+    const activeRules = $("activeRules");
+    const ruleStats = $("ruleStats");
+    const inputCard = $("inputCard");
+
+    /* ------------------------------------------------------------------
+     * Unicode maps for the format-preserving "Bold/Italic → Unicode" rules
+     * (Plays nicely with plain-text editors such as LinkedIn posts).
+     * ------------------------------------------------------------------ */
+    const BOLD_MAP = {};
+    const ITALIC_MAP = {};
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").forEach((ch, i) => {
+      BOLD_MAP[ch] = String.fromCodePoint(0x1d5d4 + i);
+      ITALIC_MAP[ch] = String.fromCodePoint(0x1d434 + i);
+    });
+    "abcdefghijklmnopqrstuvwxyz".split("").forEach((ch, i) => {
+      BOLD_MAP[ch] = String.fromCodePoint(0x1d5ee + i);
+      ITALIC_MAP[ch] = String.fromCodePoint(0x1d44e + i);
+    });
+    "0123456789".split("").forEach((ch, i) => {
+      BOLD_MAP[ch] = String.fromCodePoint(0x1d7ec + i); // bold digits exist; italic digits do not
+    });
+    ITALIC_MAP["h"] = "\u210E"; // mathematical italic small h (Planck constant slot)
+
+    const toBold = (str) => str.split("").map((ch) => BOLD_MAP[ch] || ch).join("");
+    const toItalic = (str) => str.split("").map((ch) => ITALIC_MAP[ch] || ch).join("");
+
+    /* ------------------------------------------------------------------
+     * Context "AI tell" homoglyphs: visually identical Cyrillic/Greek
+     * letters that should map back to Latin (opt-in; destructive).
+     * ------------------------------------------------------------------ */
+    const LOOKALIKE_MAP = {
+      "а": "a", "е": "e", "о": "o", "р": "p", "с": "c", "у": "y", "х": "x",
+      "А": "A", "В": "B", "Е": "E", "К": "K", "М": "M", "Н": "H", "О": "O",
+      "Р": "P", "С": "C", "Т": "T", "У": "Y", "Х": "X", "і": "i",
+      "Α": "A", "Β": "B", "Ε": "E", "Ζ": "Z", "Η": "H", "Κ": "K", "Μ": "M",
+      "Ν": "N", "Ο": "O", "Ρ": "P", "Τ": "T", "Υ": "Y", "Χ": "X",
+      "ο": "o", "ε": "e", "ρ": "p", "α": "a",
+    };
+    const LOOKALIKE_RE = new RegExp(
+      "[" +
+        Object.keys(LOOKALIKE_MAP)
+          .map((ch) => "\\u" + ch.codePointAt(0).toString(16).padStart(4, "0"))
+          .join("") +
+        "]",
+      "g",
+    );
+
+    /* ------------------------------------------------------------------
+     * Cleaning rules.
+     * Every rule is a pure function: (text) → { text, count }.
+     * "count" is how many artifacts the rule removed, for the stat chips.
+     * ------------------------------------------------------------------ */
+    const RULE_DEFS = [
+      {
+        id: "hidden",
+        group: "Clean-up",
+        label: "Strip invisible characters",
+        short: "0‑width",
+        hint: "Zero-width chars, BOM, soft hyphens & private-use citation glyphs. Keeps emoji joiners and right-to-left direction marks.",
+        on: false,
+        apply: (text) => {
+          const hidden =
+            /[\u00AD\u034F\u180E\u200B\u2060-\u2064\uFEFF\uE000-\uF8FF\uFFF9-\uFFFC]/g;
+          return { text: text.replace(hidden, ""), count: (text.match(hidden) || []).length };
+        },
+      },
+      {
+        id: "nbsp",
+        group: "Clean-up",
+        label: "Convert non-breaking spaces",
+        short: "NBSP",
+        hint: "Turns \u00A0\u2007\u202F-style non-breaking spaces into normal spaces.",
+        on: false,
+        apply: (text) => {
+          const nbsp = /[\u00A0\u2007\u202F]/g;
+          return { text: text.replace(nbsp, " "), count: (text.match(nbsp) || []).length };
+        },
+      },
+      {
+        id: "lookalikes",
+        group: "Clean-up",
+        label: "Fix lookalike letters",
+        short: "а→a",
+        hint: "Maps Cyrillic/Greek lookalikes to Latin. Destructive for genuinely non-Latin text — keep off unless you suspect it.",
+        on: false,
+        apply: (text) => {
+          return {
+            text: text.replace(LOOKALIKE_RE, (ch) => LOOKALIKE_MAP[ch] || ch),
+            count: (text.match(LOOKALIKE_RE) || []).length,
+          };
+        },
+      },
+      {
+        id: "quotes",
+        group: "Clean-up",
+        label: "Straighten curly quotes",
+        short: "“”",
+        hint: "“curly” → \"straight\" quotes — helps code, JSON and AI-detector-sensitive text.",
+        on: false,
+        apply: (text) => {
+          const next = text
+            .replace(/[\u2018\u2019\u201B\u02BC]/g, "'")
+            .replace(/[\u201C\u201D\u201F]/g, "\"");
+          return { text: next, count: (text.match(/[\u2018\u2019\u201B\u201C\u201D\u201F\u02BC]/g) || []).length };
+        },
+      },
+      {
+        id: "dashes",
+        group: "Clean-up",
+        label: "Dashes → hyphen",
+        short: "—",
+        hint: "Em/en/figure dashes become a plain hyphen -(\u2012\u2013\u2014\u2015 all normalize).",
+        on: false,
+        apply: (text) => {
+          const dash = /[\u2012\u2013\u2014\u2015]/g;
+          return { text: text.replace(dash, "-"), count: (text.match(dash) || []).length };
+        },
+      },
+      {
+        id: "ellipsis",
+        group: "Clean-up",
+        label: "Ellipsis → three dots",
+        short: "…",
+        hint: "The single-character … becomes three dots.",
+        on: false,
+        apply: (text) => {
+          const dots = /\u2026/g;
+          return { text: text.replace(dots, "..."), count: (text.match(dots) || []).length };
+        },
+      },
+      {
+        id: "headings",
+        group: "Markdown",
+        label: "Strip # heading markers",
+        short: "#",
+        hint: "Removes leading up-to-six #'s at the start of lines.",
+        on: false,
+        apply: (text) => {
+          const heading = /^[ ]{0,3}#{1,6}[ ]+/gm;
+          return { text: text.replace(heading, ""), count: (text.match(heading) || []).length };
+        },
+      },
+      {
+        id: "backticks",
+        group: "Markdown",
+        label: "Strip code markers",
+        short: "`",
+        hint: "Removes inline `backticks` and whole ``` fence lines.",
+        on: false,
+        apply: (text) => {
+          const fence = /^[ \t]*`{3,}[^\n]*$/gm;
+          const fences = (text.match(fence) || []).length;
+          let next = text.replace(fence, "");
+          const backtick = /`+/g;
+          const ticks = (next.match(backtick) || []).length;
+          return { text: next.replace(backtick, ""), count: fences + ticks };
+        },
+      },
+      {
+        id: "links",
+        group: "Markdown",
+        label: "Flatten links",
+        short: "[a](b)",
+        hint: "Converts markdown links like [label](url) into label (url).",
+        on: false,
+        apply: (text) => {
+          const link = /!?\[([^\]\n]*)\]\(([^()\n]+)\)/g;
+          return {
+            text: text.replace(link, "$1 ($2)"),
+            count: (text.match(link) || []).length,
+          };
+        },
+      },
+      {
+        id: "listmarkers",
+        group: "Markdown",
+        label: "Strip bullet markers",
+        short: "•",
+        hint: "Removes leading -, + or * list markers (keeps numbered lists).",
+        on: false,
+        apply: (text) => {
+          const bullet = /^[ \t]*[-*+][ \t]+/gm;
+          return { text: text.replace(bullet, ""), count: (text.match(bullet) || []).length };
+        },
+      },
+      {
+        id: "underscores",
+        group: "Markdown",
+        label: "Strip _underscore_ emphasis",
+        short: "_",
+        hint: "Unwraps paired underscores. snake_case identifiers are left alone.",
+        on: false,
+        apply: (text) => {
+          const pair = /(^|[^_\w])(_{1,3})([^_\n]+?)(_{1,3})(?![\w_])/g;
+          return {
+            text: text.replace(pair, "$1$3"),
+            count: (text.match(pair) || []).length,
+          };
+        },
+      },
+      {
+        id: "bold",
+        group: "Unicode",
+        label: "**bold** → Unicode bold",
+        short: "\u{1D5D4}\u{1D5D5}",
+        hint: "Converts bold markers to \u{1D5D8}\u{1D5E2}\u{1D5F1}\u{1D5D5} letters that survive LinkedIn & plain-text editors. Runs before asterisk removal.",
+        on: false,
+        apply: (text) => {
+          const bold = /\*\*([^*\n]+)\*\*/g;
+          return {
+            text: text.replace(bold, (_, inner) => toBold(inner)),
+            count: (text.match(bold) || []).length,
+          };
+        },
+      },
+      {
+        id: "italic",
+        group: "Unicode",
+        label: "*italic* → Unicode italic",
+        short: "\u{1D434}\u{1D435}",
+        hint: "Converts italic markers to \u{1D438}\u{1D444}\u{1D439}\u{1D436} letters (digits stay as they are).",
+        on: false,
+        apply: (text) => {
+          const italic = /\*([^*\n]+)\*/g;
+          return {
+            text: text.replace(italic, (_, inner) => toItalic(inner)),
+            count: (text.match(italic) || []).length,
+          };
+        },
+      },
+      {
+        id: "asterisks",
+        group: "Markdown",
+        label: "Remove asterisks",
+        short: "*",
+        hint: "The original rule: strips every **bold** and *italic* asterisk while keeping spacing and line breaks.",
+        on: true,
+        apply: (text) => {
+          const star = /\*/g;
+          return { text: text.replace(star, ""), count: (text.match(star) || []).length };
+        },
+      },
+    ];
+
+    const RULES_BY_ID = Object.fromEntries(RULE_DEFS.map((def) => [def.id, def]));
+
+    /* Execution order: normalisations first, then markdown structure,
+     * then emphasis pairs, then the plain asterisk sweep (last). */
+    const RULE_ORDER = [
+      "lookalikes", "hidden", "nbsp", "quotes", "dashes", "ellipsis",
+      "headings", "backticks", "links", "listmarkers", "underscores",
+      "bold", "italic", "asterisks",
+    ];
+
+    const PRESETS = {
+      default: ["asterisks"],
+      plain: [
+        "lookalikes", "hidden", "nbsp", "quotes", "dashes", "ellipsis",
+        "headings", "backticks", "links", "listmarkers", "underscores", "asterisks",
+      ],
+      messaging: [
+        "hidden", "nbsp", "quotes", "dashes", "ellipsis",
+        "headings", "listmarkers", "underscores", "asterisks",
+      ],
+      code: ["hidden", "nbsp", "quotes", "dashes", "ellipsis", "asterisks"],
+    };
+
+    function clean(source, opts) {
+      let text = source;
+      const counts = [];
+
+      for (const id of RULE_ORDER) {
+        if (!opts[id] || !text) continue;
+        const def = RULES_BY_ID[id];
+        const { text: next, count } = def.apply(text);
+        if (count > 0) counts.push({ id, short: def.short, label: def.label, count });
+        text = next;
+      }
+
+      const total = counts.reduce((sum, entry) => sum + entry.count, 0);
+      return { text, counts, total };
     }
 
-    // Increments on every update() so an older async copy can never
-    // overwrite the status of a newer one.
+    /* ------------------------------------------------------------------ */
+
+    function currentOptions() {
+      const opts = {};
+      for (const def of RULE_DEFS) {
+        const cb = $("opt-" + def.id);
+        opts[def.id] = cb ? cb.checked : def.on;
+      }
+      return opts;
+    }
+
+    function buildOptions() {
+      let lastGroup = null;
+      for (const def of RULE_DEFS) {
+        if (def.group !== lastGroup) {
+          const title = document.createElement("h3");
+          title.className = "opt-group-title";
+          title.textContent = def.group;
+          optionsGrid.appendChild(title);
+          lastGroup = def.group;
+        }
+        const label = document.createElement("label");
+        label.className = "opt";
+        const cb = document.createElement("input");
+        cb.type = "checkbox";
+        cb.id = "opt-" + def.id;
+        cb.checked = def.on;
+        const text = document.createElement("span");
+        const strong = document.createElement("span");
+        strong.className = "opt-label";
+        strong.textContent = def.label;
+        const desc = document.createElement("span");
+        desc.className = "opt-desc";
+        desc.textContent = def.hint;
+        text.appendChild(strong);
+        text.appendChild(desc);
+        label.title = def.hint;
+        label.appendChild(cb);
+        label.appendChild(text);
+        optionsGrid.appendChild(label);
+      }
+    }
+
+    function applyPreset(name) {
+      const ids = PRESETS[name];
+      if (!ids) return;
+      for (const def of RULE_DEFS) {
+        const cb = $("opt-" + def.id);
+        if (cb) cb.checked = ids.includes(def.id);
+      }
+      update();
+    }
+
+    /* ------------------------------------------------------------------
+     * Count helpers.
+     * ------------------------------------------------------------------ */
+    function countWords(text) {
+      const words = text.trim().split(/\s+/);
+      return words.length === 1 && words[0] === "" ? 0 : words.length;
+    }
+
+    function countLines(text) {
+      const lines = text.trim().split("\n");
+      return lines.length === 1 && lines[0] === "" ? 0 : lines.length;
+    }
+
+    function setStatus(flash, restoreAfter) {
+      statusText.innerHTML = `<span class="status-dot"></span>${flash}`;
+      if (restoreAfter) {
+        setTimeout(() => { if (statusText) update(); }, restoreAfter);
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
+    // Session persistence (input, options, auto-copy, theme, options-open).
+    // Everything stays in this browser — nothing is uploaded anywhere.
+    /* ------------------------------------------------------------------ */
+    const SESSION_KEY = "asterisk-cleaner-session-v1";
+    let saveTimer = null;
+
+    function saveSession() {
+      if (saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        try {
+          localStorage.setItem(
+            SESSION_KEY,
+            JSON.stringify({
+              text: input.value,
+              options: currentOptions(),
+              autoCopy: autoCopy.checked,
+              open: optionsEl.open,
+              theme: document.documentElement.dataset.theme,
+            }),
+          );
+        } catch (error) {
+          /* localStorage unavailable (private mode etc.) — fail silently. */
+        }
+      }, 300);
+    }
+
+    function restoreSession() {
+      try {
+        const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
+        if (!session) return false;
+        if (typeof session.text === "string") input.value = session.text;
+        if (session.options && typeof session.options === "object") {
+          for (const def of RULE_DEFS) {
+            const cb = $("opt-" + def.id);
+            if (cb && typeof session.options[def.id] === "boolean") cb.checked = session.options[def.id];
+          }
+        }
+        if (typeof session.autoCopy === "boolean") autoCopy.checked = session.autoCopy;
+        if (typeof session.open === "boolean") optionsEl.open = session.open;
+        if (session.theme === "light" || session.theme === "dark") applyTheme(session.theme);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    /* ------------------------------------------------------------------ */
+    // Theme.
+    /* ------------------------------------------------------------------ */
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      themeBtn.textContent = theme === "light" ? "🌙" : "☀️";
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.content = theme === "light" ? "#eef1fb" : "#0b1020";
+      saveSession();
+    }
+
+    /* ------------------------------------------------------------------ */
+    // Core render.
+    /* ------------------------------------------------------------------ */
     let copyToken = 0;
 
     async function update() {
       const token = ++copyToken;
       const source = input.value;
-      const cleaned = cleanText(source);
-      const removed = (source.match(/\*/g) || []).length;
+      const opts = currentOptions();
+      const result = clean(source, opts);
 
-      inputCount.textContent =
-        `${source.length.toLocaleString()} character${source.length === 1 ? "" : "s"}`;
-      removedCount.textContent =
-        `${removed.toLocaleString()} removed`;
+      const chars = source.length;
+      const words = countWords(source);
+      const lines = countLines(source);
+      inputCount.textContent = source
+        ? `${chars.toLocaleString()} chars · ${words.toLocaleString()} words · ${lines.toLocaleString()} lines`
+        : "0 characters";
+      removedCount.textContent = `${result.total.toLocaleString()} cleaned`;
+
+      // Stat chips: one per rule that removed something.
+      ruleStats.hidden = result.counts.length === 0;
+      ruleStats.innerHTML = result.counts
+        .map((entry) => `<span class="stat-chip" title="${entry.label}">${entry.short} ×${entry.count.toLocaleString()}</span>`)
+        .join("");
+
+      activeRules.textContent =
+        `${RULE_ORDER.filter((id) => opts[id]).length} of ${RULE_ORDER.length} rules on`;
 
       let status = "Ready";
 
       if (source) {
-        output.textContent = cleaned || "(Only asterisks were found)";
+        output.textContent = result.text || "(Only whitespace/markup was found)";
         output.classList.remove("empty");
-        status = removed ? "Text cleaned" : "No asterisks found";
+        status = result.total > 0 ? "Text cleaned" : "Nothing to clean";
 
         // Auto-copy: while the checkbox is checked, copy on every change.
-        if (autoCopy.checked && cleaned) {
-          const copied = await copyToClipboard(cleaned);
+        if (autoCopy.checked && result.text) {
+          const copied = await copyToClipboard(result.text);
           if (copied && token === copyToken) {
             status = "Auto-copied ✓";
           }
@@ -456,6 +1160,15 @@ Please remove all *asterisks* from this text."
       if (token === copyToken) {
         statusText.innerHTML = `<span class="status-dot"></span>${status}`;
       }
+
+      saveSession();
+    }
+
+    /* ------------------------------------------------------------------ */
+    // Clipboard, share, download.
+    /* ------------------------------------------------------------------ */
+    function currentCleanedText() {
+      return clean(input.value, currentOptions()).text;
     }
 
     async function copyToClipboard(text) {
@@ -477,10 +1190,10 @@ Please remove all *asterisks* from this text."
     }
 
     async function copyResult() {
-      const source = input.value;
-      if (!source) return;
+      const cleaned = currentCleanedText();
+      if (!input.value) return;
 
-      const copied = await copyToClipboard(cleanText(source));
+      const copied = await copyToClipboard(cleaned);
       if (!copied) return;
 
       const oldText = copyBtn.textContent;
@@ -493,18 +1206,164 @@ Please remove all *asterisks* from this text."
       }, 1400);
     }
 
-    input.addEventListener("input", update);
+    function downloadResult() {
+      if (!input.value) return;
+      const text = currentCleanedText();
+      const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = "asterisk-cleaner.txt";
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      setStatus("Saved ✓");
+      setTimeout(update, 1800);
+    }
 
-    clearBtn.addEventListener("click", () => {
+    async function shareResult() {
+      const text = currentCleanedText();
+      if (!text) return;
+      try {
+        await navigator.share({ title: "Cleaned text", text });
+      } catch (error) {
+        /* User cancelled the share sheet — ignore. */
+      }
+    }
+
+    // One button, full loop: read clipboard → clean → put result back into
+    // the input (auto-copy makes copying automatic afterwards).
+    async function pasteAndClean() {
+      if (!navigator.clipboard || typeof navigator.clipboard.readText !== "function") return;
+      try {
+        const text = await navigator.clipboard.readText();
+        if (!text.trim()) {
+          setStatus("Clipboard is empty", 1800);
+          return;
+        }
+        input.value = text;
+        update();
+        input.focus();
+      } catch (error) {
+        setStatus("Clipboard permission denied", 2200);
+      }
+    }
+
+    function clearAll() {
       input.value = "";
       update();
       input.focus();
+    }
+
+    /* ------------------------------------------------------------------ */
+    // Wiring.
+    /* ------------------------------------------------------------------ */
+    input.addEventListener("input", update);
+    autoCopy.addEventListener("change", update);
+    optionsEl.addEventListener("toggle", saveSession);
+    optionsGrid.addEventListener("change", update);
+
+    clearBtn.addEventListener("click", clearAll);
+    copyBtn.addEventListener("click", copyResult);
+    downloadBtn.addEventListener("click", downloadResult);
+    pasteCleanBtn.addEventListener("click", pasteAndClean);
+    shareBtn.addEventListener("click", shareResult);
+
+    document.querySelectorAll(".chip-btn[data-preset]").forEach((button) => {
+      button.addEventListener("click", () => applyPreset(button.dataset.preset));
     });
 
-    copyBtn.addEventListener("click", copyResult);
+    themeBtn.addEventListener("click", () => {
+      applyTheme(document.documentElement.dataset.theme === "light" ? "dark" : "light");
+    });
 
-    // Initial state.
+    document.addEventListener("keydown", (event) => {
+      const mod = event.metaKey || event.ctrlKey;
+      if (!mod) return;
+      const key = event.key.toLowerCase();
+      if (event.altKey && key === "c") {
+        event.preventDefault();
+        copyResult();
+      } else if (event.altKey && key === "x") {
+        event.preventDefault();
+        clearAll();
+      } else if (event.shiftKey && key === "o" && !event.altKey) {
+        event.preventDefault();
+        optionsEl.open = !optionsEl.open;
+      }
+    });
+
+    /* Drag & drop files onto the input card. */
+    ["dragenter", "dragover"].forEach((type) => {
+      inputCard.addEventListener(type, (event) => {
+        event.preventDefault();
+        inputCard.classList.add("drop-active");
+      });
+    });
+    ["dragleave", "drop"].forEach((type) => {
+      inputCard.addEventListener(type, () => inputCard.classList.remove("drop-active"));
+    });
+    inputCard.addEventListener("drop", async (event) => {
+      event.preventDefault();
+      const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+      if (!file) {
+        const plain = event.dataTransfer ? event.dataTransfer.getData("text/plain") : "";
+        if (plain) {
+          input.value = plain;
+          update();
+          input.focus();
+        }
+        return;
+      }
+      try {
+        input.value = await file.text();
+        update();
+        input.focus();
+      } catch (error) {
+        setStatus("Could not read that file", 2200);
+      }
+    });
+
+    /* ------------------------------------------------------------------ */
+    // PWA: registration + share-target (shared text arrives as ?text=…).
+    /* ------------------------------------------------------------------ */
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+
+    function handleShareTarget() {
+      try {
+        const paramText = new URLSearchParams(location.search).get("text");
+        if (paramText !== null && paramText !== undefined) {
+          input.value = paramText;
+          history.replaceState(null, "", location.pathname);
+          return true;
+        }
+      } catch (error) {}
+      return false;
+    }
+
+    /* ------------------------------------------------------------------ */
+    // Boot.
+    /* ------------------------------------------------------------------ */
+    buildOptions();
+    const restored = restoreSession();
+    const sharedText = handleShareTarget(); // shared text wins over restored text
     update();
+    if (sharedText) {
+      statusText.innerHTML = '<span class="status-dot"></span>Shared text imported ✓';
+    } else if (restored && input.value) {
+      statusText.innerHTML = '<span class="status-dot"></span>Restored your last session';
+    }
+
+    /* Feature-detect the optional buttons. */
+    if (navigator.clipboard && typeof navigator.clipboard.readText === "function") {
+      pasteCleanBtn.hidden = false;
+    }
+    if (navigator.share) {
+      shareBtn.hidden = false;
+    }
   </script>
 </body>
 </html>

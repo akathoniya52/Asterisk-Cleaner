@@ -9,6 +9,8 @@ Built with plain **HTML, CSS, and JavaScript** — no frameworks, backend, or ex
 - Remove all `*` characters from any text or message
 - Preserve line breaks, spaces, and formatting
 - Live preview of the cleaned text
+- **Auto-copy** checkbox at the top of the page — copies the cleaned text automatically on every change while enabled
+- Fixed-size result panel that scrolls (vertically and horizontally) instead of expanding with content
 - Show the number of characters in the input
 - Show how many asterisks were removed
 - One-click **Copy Result** button
@@ -52,8 +54,8 @@ No npm packages or build tools are required.
 ```text
 asterisk-cleaner/
 │
-├── asterisk-cleaner.html
-└── README.md
+├── index.html
+└── Readme.md
 ```
 
 ## 🚀 Getting Started
@@ -67,7 +69,7 @@ Download the project files to your local machine.
 Simply open:
 
 ```text
-asterisk-cleaner.html
+index.html
 ```
 
 in any modern web browser.
@@ -91,6 +93,8 @@ Because the replacement only targets the asterisk character, other text, whitesp
 ## 📋 Copy Functionality
 
 The **Copy Result** button copies the cleaned text to the clipboard using the browser Clipboard API.
+
+Alternatively, enable the **Auto-copy** checkbox at the top of the page: while it is checked, the cleaned text is copied to the clipboard automatically on every change.
 
 A fallback method is also included for browsers or environments where the Clipboard API is unavailable.
 

@@ -87,6 +87,74 @@
       line-height: 1.6;
     }
 
+    .auto-copy {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: fit-content;
+      margin: 0 auto 20px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #cfd7ef;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      backdrop-filter: blur(12px);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .auto-copy input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: 0;
+      opacity: 0;
+    }
+
+    .auto-copy .switch {
+      position: relative;
+      flex: none;
+      width: 38px;
+      height: 22px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.08);
+      transition: background 0.18s ease, border-color 0.18s ease,
+        box-shadow 0.18s ease;
+    }
+
+    .auto-copy .switch::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #cfd7ef;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .auto-copy input:checked + .switch {
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), #5f8cff);
+      box-shadow: 0 0 16px rgba(124, 92, 255, 0.45);
+    }
+
+    .auto-copy input:checked + .switch::after {
+      transform: translateX(16px);
+      background: #ffffff;
+    }
+
+    .auto-copy input:focus-visible + .switch {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 2px;
+    }
+
     .workspace {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -158,12 +226,11 @@
     }
 
     .output {
-      min-height: 380px;
+      height: 380px; /* Fixed height: never expands with content */
       margin: 0;
       padding: 10px 18px 18px;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
-      overflow-y: auto;
+      white-space: pre; /* Keep original lines; long lines scroll instead of wrapping */
+      overflow: auto; /* Scroll in both directions when content exceeds the box */
       color: #e9edff;
       font: 15px/1.65 "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     }
@@ -251,7 +318,8 @@
 
     @media (max-width: 800px) {
       .workspace { grid-template-columns: 1fr; }
-      textarea, .output { min-height: 300px; }
+      textarea { min-height: 300px; }
+      .output { height: 300px; }
       body { padding: 18px 12px; }
       .footer-bar { align-items: flex-start; flex-direction: column; }
       .actions { width: 100%; }
@@ -272,6 +340,12 @@
         while keeping the original spacing, line breaks, and overall format.
       </p>
     </section>
+
+    <label class="auto-copy" for="autoCopy" title="Automatically copy the cleaned text whenever it changes">
+      <input type="checkbox" id="autoCopy" />
+      <span class="switch" aria-hidden="true"></span>
+      Auto-copy result
+    </label>
 
     <section class="workspace">
       <article class="card">
@@ -339,12 +413,18 @@ Please remove all *asterisks* from this text."
     const clearBtn = document.getElementById("clearBtn");
     const copyBtn = document.getElementById("copyBtn");
     const statusText = document.getElementById("statusText");
+    const autoCopy = document.getElementById("autoCopy");
 
     function cleanText(text) {
       return text.replace(/\*/g, "");
     }
 
-    function update() {
+    // Increments on every update() so an older async copy can never
+    // overwrite the status of a newer one.
+    let copyToken = 0;
+
+    async function update() {
+      const token = ++copyToken;
       const source = input.value;
       const cleaned = cleanText(source);
       const removed = (source.match(/\*/g) || []).length;
@@ -354,39 +434,54 @@ Please remove all *asterisks* from this text."
       removedCount.textContent =
         `${removed.toLocaleString()} removed`;
 
-      if (!source) {
+      let status = "Ready";
+
+      if (source) {
+        output.textContent = cleaned || "(Only asterisks were found)";
+        output.classList.remove("empty");
+        status = removed ? "Text cleaned" : "No asterisks found";
+
+        // Auto-copy: while the checkbox is checked, copy on every change.
+        if (autoCopy.checked && cleaned) {
+          const copied = await copyToClipboard(cleaned);
+          if (copied && token === copyToken) {
+            status = "Auto-copied ✓";
+          }
+        }
+      } else {
         output.textContent = "Your cleaned text will appear here...";
         output.classList.add("empty");
-        statusText.innerHTML = '<span class="status-dot"></span>Ready';
-        return;
       }
 
-      output.textContent = cleaned || "(Only asterisks were found)";
-      output.classList.remove("empty");
+      if (token === copyToken) {
+        statusText.innerHTML = `<span class="status-dot"></span>${status}`;
+      }
+    }
 
-      statusText.innerHTML =
-        `<span class="status-dot"></span>${removed ? "Text cleaned" : "No asterisks found"}`;
+    async function copyToClipboard(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch (error) {
+        // Fallback for browsers/contexts where Clipboard API is unavailable.
+        const temp = document.createElement("textarea");
+        temp.value = text;
+        temp.style.position = "fixed";
+        temp.style.opacity = "0";
+        document.body.appendChild(temp);
+        temp.select();
+        const success = document.execCommand("copy");
+        temp.remove();
+        return success;
+      }
     }
 
     async function copyResult() {
       const source = input.value;
       if (!source) return;
 
-      const cleaned = cleanText(source);
-
-      try {
-        await navigator.clipboard.writeText(cleaned);
-      } catch (error) {
-        // Fallback for browsers/contexts where Clipboard API is unavailable.
-        const temp = document.createElement("textarea");
-        temp.value = cleaned;
-        temp.style.position = "fixed";
-        temp.style.opacity = "0";
-        document.body.appendChild(temp);
-        temp.select();
-        document.execCommand("copy");
-        temp.remove();
-      }
+      const copied = await copyToClipboard(cleanText(source));
+      if (!copied) return;
 
       const oldText = copyBtn.textContent;
       copyBtn.textContent = "✓ Copied";
